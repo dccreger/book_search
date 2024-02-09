@@ -61,8 +61,15 @@ const SearchBooks = () => {
 
     try {
       // Execute saveBookMutation and pass bookData as variables
+      const authToken = Auth.getToken();
+      console.log("Authentication Token:", authToken);
       const { data } = await saveBookMutation({
         variables: { bookData: bookToSave },
+        context: {
+          headers: {
+            authorization: Auth.loggedIn() ? `Bearer ${Auth.getToken()}` : "",
+          },
+        },
       });
 
       // Update savedBookIds state with the newly saved bookId

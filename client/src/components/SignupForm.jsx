@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
-import { useMutation } from "@apollo/client"; // Import useMutation hook
-import { ADD_USER } from "../utils/mutations"; // Import ADD_USER mutation
+
 import Auth from "../utils/auth";
 
+import { useMutation } from "@apollo/client";
+import { ADD_USER } from "../utils/mutations";
+
 const SignupForm = () => {
-  // set initial form state
+  const [addUserMutation] = useMutation(ADD_USER);
+  const [showAlert, setShowAlert] = useState(false);
   const [userFormData, setUserFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
-  // set state for form validation
-  const [validated] = useState(false);
-  // set state for alert
-  const [showAlert, setShowAlert] = useState(false);
-  const [addUserMutation] = useMutation(ADD_USER);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -25,20 +23,16 @@ const SignupForm = () => {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    // check if form has everything (as per react-bootstrap docs)
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
     try {
-      // Execute addUserMutation and pass userFormData as variables
       const { data } = await addUserMutation({
         variables: { ...userFormData },
       });
 
-      const { token } = data.addUser;
+      const { token, user } = data?.addUser ?? {};
+
+      if (!token) {
+        throw new Error("Token not found in response");
+      }
 
       Auth.login(token);
     } catch (err) {
@@ -55,9 +49,7 @@ const SignupForm = () => {
 
   return (
     <>
-      {/* This is needed for the validation functionality above */}
-      <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {/* show alert if server response is bad */}
+      <Form onSubmit={handleFormSubmit}>
         <Alert
           dismissible
           onClose={() => setShowAlert(false)}

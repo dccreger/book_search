@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
 const resolvers = {
@@ -14,7 +15,11 @@ const resolvers = {
       // Implement login logic here
     },
     addUser: async (_, { username, email, password }) => {
-      // Implement add user logic here
+      const user = await User.create({ username, email, password });
+      const token = jwt.sign({ _id: user._id }, "your-secret-key", {
+        expiresIn: "1h",
+      });
+      return { token, user };
     },
     saveBook: async (_, { bookData }, context) => {
       if (context.user) {
